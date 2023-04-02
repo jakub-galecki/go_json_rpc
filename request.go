@@ -1,10 +1,10 @@
 package jsonrpc
 
 type Request struct {
-	JsonRpc string
-	Method  string
-	Params  interface{}
-	Id      string
+	JsonRpc string      `json:"jsonrpc"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params"`
+	Id      string      `json:"id"`
 }
 
 func NewRequest(method, id string, params interface{}) *Request {
