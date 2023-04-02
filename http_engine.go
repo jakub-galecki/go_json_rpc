@@ -3,7 +3,9 @@ package jsonrpc
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -27,14 +29,21 @@ func (h *httpEngine) MakeRequest(req []byte) (res Response, err error) {
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpRes, err := c.Do(httpReq)
 
-	var b []byte
-	_, err = httpRes.Body.Read(b)
-	defer func() { err = httpRes.Body.Close() }()
+	httpRes, err := c.Do(httpReq)
+	responseLength, err := strconv.Atoi(httpRes.Header.Get("Content-Length"))
+
 	if err != nil {
+		responseLength = MaxBufferSize
+	}
+
+	b := make([]byte, responseLength)
+
+	n, err := httpRes.Body.Read(b)
+	defer func() { err = httpRes.Body.Close() }()
+	if n == 0 && err != io.EOF {
 		return Response{}, err
 	}
-	err = json.Unmarshal(b, &res)
+	err = json.Unmarshal(b[:n], &res)
 	return
 }
